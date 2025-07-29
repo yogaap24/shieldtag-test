@@ -49,38 +49,6 @@ Keamanan API diperkuat melalui serangkaian *middleware* yang memeriksa setiap pe
 
 -----
 
-## Instalasi & Menjalankan Proyek 🚀
-
-1.  **Clone repositori ini:**
-
-    ```bash
-    git clone [URL-repositori-Anda]
-    cd [nama-direktori]
-    ```
-
-2.  **Instal semua dependensi:**
-
-    ```bash
-    npm install
-    ```
-
-3.  **Buat file `.env`** di direktori utama dan isi dengan variabel berikut:
-
-    ```
-    PORT=5000
-    JWT_SECRET=kunci-rahasia-yang-sangat-aman
-    ```
-
-4.  **Jalankan server dalam mode development:**
-
-    ```bash
-    npm run dev
-    ```
-
-    Server akan berjalan di `http://localhost:3000` (atau port yang Anda tentukan).
-
------
-
 ## Endpoint API ⚙️
 
   * `POST /api/auth/register` : Mendaftarkan pengguna baru.
