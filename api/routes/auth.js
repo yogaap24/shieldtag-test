@@ -21,12 +21,30 @@ router.post(
                 }
                 return true;
             }),
+        check('name', 'Nama harus diisi dan minimal 2 karakter')
+            .isLength({ min: 2, max: 100 })
+            .custom((value) => {
+                const maliciousPattern = /<script|javascript:|on\w+=/i;
+                if (maliciousPattern.test(value)) {
+                    throw new Error('Nama mengandung karakter berbahaya');
+                }
+                return true;
+            }),
         check('password', 'Password harus terdiri dari 6 karakter atau lebih')
             .isLength({ min: 6, max: 500 })
             .custom((value) => {
                 const sqlPattern = /(drop|delete|union|select|insert|update|create|alter|exec)/i;
                 if (sqlPattern.test(value)) {
                     throw new Error('Password mengandung karakter berbahaya');
+                }
+                return true;
+            }),
+        check('rePassword', 'Konfirmasi password harus diisi')
+            .notEmpty()
+            .custom((value) => {
+                const sqlPattern = /(drop|delete|union|select|insert|update|create|alter|exec)/i;
+                if (sqlPattern.test(value)) {
+                    throw new Error('Konfirmasi password mengandung karakter berbahaya');
                 }
                 return true;
             }),

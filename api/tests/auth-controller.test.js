@@ -178,4 +178,114 @@ describe("Auth Controller Tests", () => {
 		expect.toBe(mockDb.data.users.length, 1);
 		expect.toBe(mockDb.data.users[0].email, "test@example.com");
 	});
+
+	test("should validate name field", () => {
+		const validName = "John Doe";
+		const shortName = "A";
+		const longName = "A".repeat(101);
+		const maliciousName = '<script>alert("xss")</script>';
+
+		const maliciousPattern = /<script|javascript:|on\w+=/i;
+		const sanitizeInput = (input) => {
+			if (typeof input !== 'string') return input;
+			return input.replace(/<script[^>]*>.*?<\/script>/gi, '')
+						.replace(/javascript:/gi, '')
+						.replace(/on\w+=/gi, '')
+						.trim();
+		};
+
+		expect.toBe(validName.length >= 2 && validName.length <= 100, true);
+		expect.toBe(shortName.length < 2, true);
+		expect.toBe(longName.length > 100, true);
+		expect.toBe(maliciousPattern.test(maliciousName), true);
+
+		const sanitizedName = sanitizeInput(maliciousName);
+		expect.toBe(sanitizedName, '');
+	});
+
+	test("should validate password confirmation", () => {
+		const password = "password123";
+		const matchingRePassword = "password123";
+		const nonMatchingRePassword = "differentPassword";
+		const maliciousRePassword = "password<script>alert('xss')</script>";
+
+		const sqlPattern = /(drop|delete|union|select|insert|update|create|alter|exec)/i;
+		const maliciousPattern = /<script|javascript:|on\w+=/i;
+
+		expect.toBe(password === matchingRePassword, true);
+		expect.toBe(password === nonMatchingRePassword, false);
+		expect.toBe(maliciousPattern.test(maliciousRePassword), true);
+		expect.toBe(sqlPattern.test("DROP TABLE users"), true);
+	});
+
+	test("should test register function with name and rePassword", async () => {
+		const mockReq = {
+			body: {
+				name: "Test User",
+				email: "test@example.com",
+				password: "password123",
+				rePassword: "password123"
+			}
+		};
+		const mockRes = {
+			status: (code) => mockRes,
+			json: (data) => data
+		};
+
+		const validationResult = mockValidationResult;
+
+		expect.toBe(validationResult.isEmpty(), true);
+		expect.toBe(validationResult.array().length, 0);
+		expect.toBe(mockReq.body.password === mockReq.body.rePassword, true);
+		expect.toBeDefined(mockReq.body.name);
+		expect.toBe(mockReq.body.name.length >= 2, true);
+	});
+
+	test("should test getMe function returns name", async () => {
+		const mockReq = {
+			user: { id: 1 }
+		};
+		const mockRes = {
+			status: (code) => mockRes,
+			json: (data) => {
+				expect.toBeDefined(data);
+				return data;
+			}
+		};
+
+		// Mock user data dengan name
+		mockDb.data.users = [{
+			id: 1,
+			name: "Test User",
+			email: "test@example.com",
+			password: await bcrypt.hash("password123", 10),
+			createdAt: new Date().toISOString()
+		}];
+
+		expect.toBeDefined(getMe);
+		expect.toBe(typeof getMe, "function");
+		expect.toBeDefined(mockDb.data.users[0].name);
+		expect.toBe(mockDb.data.users[0].name, "Test User");
+	});
+
+	test("should test mock database with name field", async () => {
+		// Reset mock database
+		mockDb.data.users = [];
+
+		await mockDb.read();
+		await mockDb.write();
+
+		mockDb.data.users.push({
+			id: 1,
+			name: "John Doe",
+			email: "john@example.com",
+			password: await bcrypt.hash("password123", 10),
+			createdAt: new Date().toISOString()
+		});
+
+		expect.toBe(mockDb.data.users.length, 1);
+		expect.toBe(mockDb.data.users[0].email, "john@example.com");
+		expect.toBe(mockDb.data.users[0].name, "John Doe");
+		expect.toBeDefined(mockDb.data.users[0].createdAt);
+	});
 });

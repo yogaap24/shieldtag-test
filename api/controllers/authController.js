@@ -17,10 +17,16 @@ export const register = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    let { email, password } = req.body;
+    let { email, password, rePassword, name } = req.body;
+
+    if (password !== rePassword) {
+        return res.status(400).json({ msg: 'Password dan konfirmasi password tidak cocok.' });
+    }
 
     email = sanitizeInput(email);
     password = sanitizeInput(password);
+    rePassword = sanitizeInput(rePassword);
+    name = sanitizeInput(name);
 
     try {
         await db.read();
@@ -35,6 +41,7 @@ export const register = async (req, res) => {
         const newUser = {
             id: db.data.users.length + 1,
             email,
+            name,
             password: hashedPassword,
             createdAt: new Date().toISOString()
         };
@@ -48,7 +55,8 @@ export const register = async (req, res) => {
                 token,
                 user: {
                     id: newUser.id,
-                    email: newUser.email
+                    email: newUser.email,
+                    name: newUser.name
                 }
             });
         });
@@ -88,7 +96,8 @@ export const login = async (req, res) => {
                 token,
                 user: {
                     id: user.id,
-                    email: user.email
+                    email: user.email,
+                    name: user.name
                 }
             });
         });
@@ -109,6 +118,7 @@ export const getMe = async (req, res) => {
         res.json({
             id: user.id,
             email: user.email,
+            name: user.name,
             createdAt: user.createdAt
         });
     } catch (err) {
